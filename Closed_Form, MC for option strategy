@@ -1,4 +1,6 @@
 # closed form solution for option strategy
+# to create the option strategy, which shape like___/一一\___
+
 from math import log, sqrt, exp
 from scipy.stats import norm
 import numpy as np
