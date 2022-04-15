@@ -1,0 +1,118 @@
+Function Ln(x)
+    Ln = Application.WorksheetFunction.Ln(x)
+End Function
+
+Function Nd1_neg(s, r, q, sigma, T, k)
+    Dim d1, d2 As Double
+    d1 = 0.5 * sigma * T ^ 0.5 + (Ln(s * Exp(-q * T)) - Ln(k * Exp(-r * T))) / (sigma * T ^ 0.5)
+    Nd1_neg = Application.WorksheetFunction.NormSDist(-1 * d1)
+End Function
+
+Function Nd2_neg(s, r, q, sigma, T, k)
+    Dim d1, d2 As Double
+    d1 = 0.5 * sigma * T ^ 0.5 + (Ln(s * Exp(-q * T)) - Ln(k * Exp(-r * T))) / (sigma * T ^ 0.5)
+    d2 = d1 - sigma * T ^ 0.5
+    Nd2_neg = Application.WorksheetFunction.NormSDist(-1 * d2)
+End Function
+
+' solution for closed form price > option strategy __/一\__
+Private Sub CommandButton1_Click()
+
+    Dim s, r, q, sigma, T, K1, K2, K3, K4 As Double
+    s = Range("b4")
+    r = Range("b5")
+    q = Range("b6")
+    sigma = Range("b7")
+    T = Range("b8")
+    K1 = Range("b9")
+    K2 = Range("b10")
+    K3 = Range("b11")
+    K4 = Range("b12")
+    
+    Dim option_value As Double
+    part1 = K1 * Exp(-1 * r * T) * Nd2_neg(s, r, q, sigma, T, K1) - s * Exp(-1 * q * T) * Nd1_neg(s, r, q, sigma, T, K1)
+    part2 = K2 * Exp(-1 * r * T) * Nd2_neg(s, r, q, sigma, T, K2) - s * Exp(-1 * q * T) * Nd1_neg(s, r, q, sigma, T, K2)
+    part3 = ((K2 - K1) + K4 * (K2 - K1) / (K3 - K4)) * Exp(-1 * r * T) * Nd2_neg(s, r, q, sigma, T, K3) - ((K2 - K1) / (K3 - K4)) * s * Exp(-1 * q * T) * Nd1_neg(s, r, q, sigma, T, K3)
+    part4 = ((K2 - K1) / (K3 - K4)) * (K4 * Exp(-1 * r * T) * Nd2_neg(s, r, q, sigma, T, K4) - s * Exp(-1 * q * T) * Nd1_neg(s, r, q, sigma, T, K4))
+    option_value = part1 - part2 + part3 - part4
+    
+    Range("E4") = option_value
+    
+End Sub
+
+' monte carlo > option strategy __/一\__
+Private Sub CommandButton2_Click()
+    Dim s, r, q, sigma, T, K1, K2, K3, K4 As Double
+    s = Range("b4")
+    r = Range("b5")
+    q = Range("b6")
+    sigma = Range("b7")
+    T = Range("b8")
+    K1 = Range("b9")
+    K2 = Range("b10")
+    K3 = Range("b11")
+    K4 = Range("b12")
+    
+    Dim option_value(20) As Double
+    Dim payoff(10000) As Double
+    
+    For Path = 1 To 20
+        For i = 1 To 10000
+            rand = Application.WorksheetFunction.NormSInv(Rnd())
+            ln_sT = Ln(s) + (r - q - 0.5 * (sigma ^ 2)) * T + sigma * (T ^ 0.5) * rand
+            sT = Exp(ln_sT)
+            
+            If sT >= K1 And sT < K2 Then
+                payoff_T = sT - K1
+            ElseIf sT >= K2 And sT < K3 Then
+                payoff_T = K2 - K1
+            ElseIf sT >= K3 And sT < K4 Then
+                payoff_T = (K2 - K1) / (K3 - K4) * (sT - K4)
+            Else
+                payoff_T = 0
+            End If
+            
+            payoff(i) = payoff_T
+        Next i
+        
+        Price = Exp(-1 * r * T) * Application.WorksheetFunction.Average(payoff)
+        option_value(Path) = Price
+        
+        For j = 1 To 10000
+            payoff(j) = 0
+        Next j
+    Next Path
+    
+    Dim mean, std As Double
+    
+    Range("d15") = option_value(1)
+    Range("d16") = option_value(2)
+    Range("d17") = option_value(3)
+    Range("d18") = option_value(4)
+    Range("d19") = option_value(5)
+    Range("d20") = option_value(6)
+    Range("d21") = option_value(7)
+    Range("d22") = option_value(8)
+    Range("d23") = option_value(9)
+    Range("d24") = option_value(10)
+    Range("d25") = option_value(11)
+    Range("d26") = option_value(12)
+    Range("d27") = option_value(13)
+    Range("d28") = option_value(14)
+    Range("d29") = option_value(15)
+    Range("d30") = option_value(16)
+    Range("d31") = option_value(17)
+    Range("d32") = option_value(18)
+    Range("d33") = option_value(19)
+    Range("d34") = option_value(20)
+    
+    std = Application.WorksheetFunction.StDev([d15:d34])
+    mean = Application.WorksheetFunction.Average([d15:d34])
+    
+    upper_bound = mean + 2 * std
+    lower_bound = mean - 2 * std
+    Range("e9") = upper_bound
+    Range("e10") = lower_bound
+
+    
+End Sub
