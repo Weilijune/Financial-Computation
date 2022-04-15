@@ -1,0 +1,262 @@
+Function Ln(x)
+    Ln = Application.WorksheetFunction.Ln(x)
+End Function
+    
+Function BScall(s, r, q, sigma, T, k)
+    Dim d1, d2 As Double
+    d1 = 0.5 * sigma * T ^ 0.5 + (Ln(s * Exp(-q * T)) - Ln(k * Exp(-r * T))) / (sigma * T ^ 0.5)
+    d2 = d1 - sigma * T ^ 0.5
+    BScall = s * Exp(-q * T) * Application.WorksheetFunction.NormSDist(d1) - k * Exp(-r * T) * Application.WorksheetFunction.NormSDist(d2)
+End Function
+
+Function BSput(s, r, q, sigma, T, k)
+    Dim d1, d2 As Double
+    d1 = 0.5 * sigma * T ^ 0.5 + (Ln(s * Exp(-q * T)) - Ln(k * Exp(-r * T))) / (sigma * T ^ 0.5)
+    d2 = d1 - sigma * T ^ 0.5
+    BSput = k * Exp(-r * T) * Application.WorksheetFunction.NormSDist(-d2) - s * Exp(-q * T) * Application.WorksheetFunction.NormSDist(-d1)
+End Function
+
+
+' black scholes pricing
+Private Sub CommandButton1_Click()
+
+    Dim s, k, r, q, sigma, T As Double
+    s = Range("b4")
+    k = Range("b5")
+    r = Range("b6")
+    q = Range("b7")
+    sigma = Range("b8")
+    T = Range("b9")
+    
+    Dim call_price, put_price As Double
+    call_price = BScall(s, r, q, sigma, T, k)
+    put_price = BSput(s, r, q, sigma, T, k)
+    Range("E5") = call_price
+    Range("E6") = put_price
+    
+End Sub
+
+
+' MC for EURcall
+Private Sub CommandButton2_Click()
+    Dim s, k, r, q, sigma, T, num_sim, num_rep, n As Double
+    s = Range("b4")
+    k = Range("b5")
+    r = Range("b6")
+    q = Range("b7")
+    sigma = Range("b8")
+    T = Range("b9")
+    num_sim = Range("b10")
+    num_rep = Range("b11")
+    n = Range("b12")
+    
+    Dim sum_payoff, sum_price, sum_price_square As Double
+    sum_price = 0
+    sum_price_square = 0
+    
+    For Path = 1 To num_rep
+        sum_payoff = 0
+        For i = 1 To num_sim
+            rand = Application.WorksheetFunction.NormSInv(Rnd())
+            ln_sT = Ln(s) + (r - q - 0.5 * (sigma ^ 2)) * T + sigma * (T ^ 0.5) * rand
+            sT = Exp(ln_sT)
+            
+            If sT >= k Then
+                payoff_T = sT - k
+            Else
+                payoff_T = 0
+            End If
+            
+            sum_payoff = sum_payoff + payoff_T
+        Next i
+        
+        Price = Exp(-1 * r * T) * (sum_payoff / num_sim)
+        sum_price = sum_price + Price
+        sum_price_square = sum_price_square + Price ^ 2
+        
+    Next Path
+    
+    Dim mean, std, upper_bound, lower_bound As Double
+    mean = sum_price / num_rep
+    std = (sum_price_square - ((sum_price ^ 2) / num_rep)) / (num_rep - 1)
+    
+    upper_bound = mean + 2 * std
+    lower_bound = mean - 2 * std
+    Range("e10") = upper_bound
+    Range("e11") = lower_bound
+End Sub
+
+
+' MC for EURput
+Private Sub CommandButton3_Click()
+    Dim s, k, r, q, sigma, T, num_sim, num_rep, n As Double
+    s = Range("b4")
+    k = Range("b5")
+    r = Range("b6")
+    q = Range("b7")
+    sigma = Range("b8")
+    T = Range("b9")
+    num_sim = Range("b10")
+    num_rep = Range("b11")
+    n = Range("b12")
+    
+    Dim sum_payoff, sum_price, sum_price_square As Double
+    sum_price = 0
+    sum_price_square = 0
+    
+    For Path = 1 To num_rep
+        sum_payoff = 0
+        For i = 1 To num_sim
+            rand = Application.WorksheetFunction.NormSInv(Rnd())
+            ln_sT = Ln(s) + (r - q - 0.5 * (sigma ^ 2)) * T + sigma * (T ^ 0.5) * rand
+            sT = Exp(ln_sT)
+            
+            If sT >= k Then
+                payoff_T = 0
+            Else
+                payoff_T = k - sT
+            End If
+            
+            sum_payoff = sum_payoff + payoff_T
+        Next i
+        
+        Price = Exp(-1 * r * T) * (sum_payoff / num_sim)
+        sum_price = sum_price + Price
+        sum_price_square = sum_price_square + Price ^ 2
+        
+    Next Path
+    
+    Dim mean, std, upper_bound, lower_bound As Double
+    mean = sum_price / num_rep
+    std = (sum_price_square - ((sum_price ^ 2) / num_rep)) / (num_rep - 1)
+    
+    upper_bound = mean + 2 * std
+    lower_bound = mean - 2 * std
+    Range("e14") = upper_bound
+    Range("e15") = lower_bound
+End Sub
+
+
+' CRR (binomial tree) for european option
+Private Sub CommandButton4_Click()
+    Dim s, k, r, q, sigma, T, n As Double
+    s = Range("b4")
+    k = Range("b5")
+    r = Range("b6")
+    q = Range("b7")
+    sigma = Range("b8")
+    T = Range("b9")
+    n = Range("b12")
+    
+    Dim dt, u, d, p As Double
+    dt = T / n
+    u = Exp(sigma * (dt ^ (1 / 2)))
+    d = 1 / u
+    p = (Exp((r - q) * dt) - d) / (u - d)
+    
+    ' call
+    Dim c(100, 100) As Double
+    For i = 0 To 100
+        c(i, 100) = Application.WorksheetFunction.Max(s * (u ^ (100 - i)) * (d ^ i) - k, 0)
+    Next i
+    
+    For i = 0 To 99
+        Dim col As Double
+        col = 100 - 1 - i
+        j = 0
+        Do While j <= col
+            c(j, col) = (p * c(j, col + 1) + (1 - p) * c(j + 1, col + 1)) * Exp(-r * dt)
+            j = j + 1
+        Loop
+    Next i
+    
+    Dim crr_price As Double
+    crr_price = c(0, 0)
+    Range("e18") = crr_price
+        
+    ' pur
+    Dim put_price(100, 100) As Double
+    For i = 0 To 100
+        put_price(i, 100) = Application.WorksheetFunction.Max(k - s * (u ^ (100 - i)) * (d ^ i), 0)
+    Next i
+    
+    For i = 0 To 99
+        Dim coll As Double
+        coll = 100 - 1 - i
+        j = 0
+        Do While j <= coll
+            put_price(j, coll) = (p * put_price(j, coll + 1) + (1 - p) * put_price(j + 1, coll + 1)) * Exp(-r * dt)
+            j = j + 1
+        Loop
+    Next i
+    
+    Dim crr_put As Double
+    crr_put = put_price(0, 0)
+    Range("e19") = crr_put
+        
+End Sub
+
+' CRR (binomial tree) for American option
+Private Sub CommandButton5_Click()
+    Dim s, k, r, q, sigma, T, n As Double
+    s = Range("b4")
+    k = Range("b5")
+    r = Range("b6")
+    q = Range("b7")
+    sigma = Range("b8")
+    T = Range("b9")
+    n = Range("b12")
+    
+    Dim dt, u, d, p As Double
+    dt = T / n
+    u = Exp(sigma * (dt ^ (1 / 2)))
+    d = 1 / u
+    p = (Exp((r - q) * dt) - d) / (u - d)
+    
+    ' call
+    Dim c(100, 100) As Double
+    For i = 0 To 100
+        c(i, 100) = Application.WorksheetFunction.Max(s * (u ^ (100 - i)) * (d ^ i) - k, 0)
+    Next i
+    
+    For i = 0 To 99
+        Dim col As Double
+        col = 100 - 1 - i
+        j = 0
+        Do While j <= col
+            Dim call_HTM, call_ee As Double
+            ' ee is early exercise
+            call_HTM = (p * c(j, col + 1) + (1 - p) * c(j + 1, col + 1)) * Exp(-r * dt)
+            call_ee = Application.WorksheetFunction.Max(s * (u ^ (col - j)) * (d ^ j) - k, 0)
+            c(j, col) = Application.WorksheetFunction.Max(call_HTM, call_ee)
+            j = j + 1
+        Loop
+    Next i
+    
+    Dim crr_price As Double
+    crr_price = c(0, 0)
+    Range("e21") = crr_price
+        
+    ' put
+    Dim put_price(100, 100) As Double
+    For i = 0 To 100
+        put_price(i, 100) = Application.WorksheetFunction.Max(k - s * (u ^ (100 - i)) * (d ^ i), 0)
+    Next i
+    
+    For i = 0 To 99
+        Dim coll As Double
+        coll = 100 - 1 - i
+        j = 0
+        Do While j <= coll
+            Dim put_HTM, put_ee As Double
+            put_HTM = (p * put_price(j, coll + 1) + (1 - p) * put_price(j + 1, coll + 1)) * Exp(-r * dt)
+            put_ee = Application.WorksheetFunction.Max(k - s * (u ^ (coll - j)) * (d ^ j), 0)
+            put_price(j, coll) = Application.WorksheetFunction.Max(put_HTM, put_ee)
+            j = j + 1
+        Loop
+    Next i
+    
+    Dim crr_put As Double
+    crr_put = put_price(0, 0)
+    Range("e22") = crr_put
+End Sub
