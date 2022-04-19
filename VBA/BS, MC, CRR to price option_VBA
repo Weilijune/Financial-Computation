@@ -76,9 +76,10 @@ Private Sub CommandButton2_Click()
         
     Next Path
     
-    Dim mean, std, upper_bound, lower_bound As Double
+    Dim mean, std, upper_bound, lower_bound, var_of_price As Double
     mean = sum_price / num_rep
-    std = (sum_price_square - ((sum_price ^ 2) / num_rep)) / (num_rep - 1)
+    var_of_price = (sum_price_square - ((sum_price ^ 2) / num_rep)) / (num_rep - 1)
+    std = var_of_price ^ (0.5)
     
     upper_bound = mean + 2 * std
     lower_bound = mean - 2 * std
@@ -126,9 +127,10 @@ Private Sub CommandButton3_Click()
         
     Next Path
     
-    Dim mean, std, upper_bound, lower_bound As Double
+    Dim mean, std, upper_bound, lower_bound, var_of_price As Double
     mean = sum_price / num_rep
-    std = (sum_price_square - ((sum_price ^ 2) / num_rep)) / (num_rep - 1)
+    var_of_price = (sum_price_square - ((sum_price ^ 2) / num_rep)) / (num_rep - 1)
+    std = var_of_price ^ (0.5)
     
     upper_bound = mean + 2 * std
     lower_bound = mean - 2 * std
