@@ -27,9 +27,7 @@ int main(int argc, char const *argv[])
 
     // output
     cout<<"Tree model: "<<endl;
-    cout<<"  European Lookback call price = "<<lookback_option.eur_call_price()<<endl;
     cout<<"  European Lookback put  price = "<<lookback_option.eur_put_price()<<endl;
-    cout<<"  American Lookback call price = "<<lookback_option.am_call_price()<<endl;
     cout<<"  American Lookback put  price = "<<lookback_option.am_put_price()<<endl;
 
     return 0;
