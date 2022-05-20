@@ -81,41 +81,6 @@ class Lookback_Option{
             double lookback_EURput = S * V[0][0];
             return lookback_EURput;
         }
-
-        double eur_call_price() {
-            double dt = T/n;
-            double u = exp(sigma * sqrt(dt));
-            double d = 1/u;
-            double mu = exp((r-q)*dt);
-            // prob_of_up_ adjusted prob measure
-            double p_up = (mu * u - 1) / (mu * (u-d));
-
-            // find V(k,tj): consider Stock price, not money, as the numeraire
-            double V[101][101];
-
-            // terminal node for V
-            for (int row=0; row<= n; row++){
-                int k = n - row;  // row由上而下為0,1,2,...,n； k則由上而下為n,n-1,....,0
-                V[row][n] = max<double>(1 - pow(u, -k), 0); // call
-            }
-
-            // backward induction
-            for (int col = n-1; col >= 0; col--){
-                for (int row = 0 ; row <= n; row++){
-                    if (row < col){
-                        // 處理V(k,tj) for k >= 1
-                        V[row][col] = (p_up * V[row+2][col+1] + (1-p_up) * V[row][col+1]) * mu / (exp(r*dt));
-                    }
-                    else if (row == col){
-                        // 處理V(0,tj)
-                        V[row][col] = (p_up * V[row+1][col+1] + (1-p_up) * V[row][col+1]) * mu / (exp(r*dt));
-                    }
-                }
-            }
-
-            double lookback_EURcall = S * V[0][0];
-            return lookback_EURcall;
-        }
         
         double am_put_price() {
             double dt = T/n;
@@ -156,43 +121,4 @@ class Lookback_Option{
             return lookback_AMput;
         }
         
-        double am_call_price() {
-            double dt = T/n;
-            double u = exp(sigma * sqrt(dt));
-            double d = 1/u;
-            double mu = exp((r-q)*dt);
-            // prob_of_up_ adjusted prob measure
-            double p_up = (mu * u - 1) / (mu * (u-d));
-
-            // find V(k,tj)
-            double V[101][101];
-
-            // terminal node for V
-            for (int row=0; row<= n; row++){
-                int k = n - row; // row由上而下為0,1,2,...,n； k則由上而下為n,n-1,....,0
-                V[row][n] = max<double>(1 - pow(u, -k), 0); // call
-            }
-
-            // backward induction: decide whether early exercise is better?
-            for (int col = n-1; col >= 0; col--){
-                for (int row = 0 ; row <= n; row++){
-                    if (row < col){
-                        int k = col - row; //為early exercise對應到的u的次方數
-                        //處理V(k,tj) for k >= 1
-                        double V_if_HTM = (p_up * V[row+2][col+1] + (1-p_up) * V[row][col+1]) * mu / (exp(r*dt));
-                        double V_if_early_exercise = pow(u, k) - 1;
-                        V[row][col] = max<double>(V_if_HTM, V_if_early_exercise);
-                    }
-                    else if (row == col){
-                        int k = 0;
-                        //處理V(0,tj)
-                        double V_if_HTM = (p_up * V[row+1][col+1] + (1-p_up) * V[row][col+1]) * mu / (exp(r*dt));
-                        double V_if_early_exercise = pow(u, k) - 1;
-                        V[row][col] = max<double>(V_if_HTM, V_if_early_exercise);
-                    }
-                }
-            }
-            double lookback_AMcall = S * V[0][0];
-            return lookback_AMcall;
-        }
 };
