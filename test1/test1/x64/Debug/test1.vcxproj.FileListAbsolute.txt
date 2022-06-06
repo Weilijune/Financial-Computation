@@ -1,0 +1,8 @@
+C:\Users\Bill\source\repos\test1\test1\x64\Debug\test1.vcxproj.AssemblyReference.cache
+C:\Users\Bill\source\repos\test1\test1\x64\Debug\test1.vcxproj.SuggestedBindingRedirects.cache
+C:\Users\Bill\source\repos\test1\test1\x64\Debug\test1.Myform.resources
+C:\Users\Bill\source\repos\test1\test1\x64\Debug\test1.vcxproj.GenerateResource.cache
+D:\作業\台大課程\財務演算法\test1\test1\x64\Debug\test1.vcxproj.AssemblyReference.cache
+D:\作業\台大課程\財務演算法\test1\test1\x64\Debug\test1.vcxproj.SuggestedBindingRedirects.cache
+D:\作業\台大課程\財務演算法\test1\test1\x64\Debug\test1.Myform.resources
+D:\作業\台大課程\財務演算法\test1\test1\x64\Debug\test1.vcxproj.GenerateResource.cache
